@@ -2,7 +2,8 @@
 
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from src.env.database import Base
+from src.models.base import Base
+
 
 # SQLAlchemy model for the Role table
 class Role(Base):

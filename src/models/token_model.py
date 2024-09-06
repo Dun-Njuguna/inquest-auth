@@ -1,7 +1,7 @@
 # auth-microservice/src/models/token_model.py
 
 from sqlalchemy import Column, Integer, String
-from src.env.database import Base
+from src.models.base import Base
 
 # SQLAlchemy model for the Token table
 class Token(Base):
