@@ -1,5 +1,3 @@
-# auth-microservice/src/models/role_model.py
-
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from src.models.base import Base

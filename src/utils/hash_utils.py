@@ -1,5 +1,3 @@
-# auth-microservice/src/utils/hash_utils.py
-
 from passlib.context import CryptContext
 
 # Password hashing context using bcrypt

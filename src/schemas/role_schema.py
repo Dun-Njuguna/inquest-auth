@@ -1,5 +1,3 @@
-# auth-microservice/src/schemas/role_schema.py
-
 from pydantic import BaseModel
 
 # Base schema for roles

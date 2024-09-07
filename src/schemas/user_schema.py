@@ -1,5 +1,3 @@
-# src/schemas/user_schema.py
-
 from pydantic import BaseModel, EmailStr
 
 # Schema for creating a new user

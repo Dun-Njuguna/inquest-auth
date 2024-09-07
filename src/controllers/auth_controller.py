@@ -1,32 +1,58 @@
-# src/controllers/auth_controller.py
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from src.schemas.user_schema import UserCreate, UserResponse, Token
+from src.models.login_model import LoginModel
+from src.models.response_model import ResponseModel
+from src.env.database import get_db
+from src.schemas.user_schema import UserCreate
 from src.services.auth_service import AuthService
-from src.utils.jwt_utils import create_access_token
-from datetime import timedelta
 
 router = APIRouter()
-
 auth_service = AuthService()
 
-@router.post("/register", response_model=UserResponse)
-async def register(user: UserCreate):
-    # Register a new user
-    return await auth_service.register_user(user)
 
-@router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # Authenticate the user and return a token
-    user = await auth_service.authenticate_user(form_data.username, form_data.password)
-    if not user:
+
+@router.post("/register", response_model=ResponseModel)
+async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    try:
+        new_user = await auth_service.register_user(user, db)
+        return new_user
+    except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
         )
-    access_token_expires = timedelta(minutes=60)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login", response_model=ResponseModel)
+async def login(request: Request, db: AsyncSession = Depends(get_db)):
+    content_type = request.headers.get('Content-Type', '')
+
+    try:
+        if 'application/json' in content_type:
+            json_data = await request.json()
+            form_data = LoginModel(**json_data)
+        elif 'application/x-www-form-urlencoded' in content_type:
+            form_data = await request.form()
+            form_data = LoginModel(email=form_data['email'], password=form_data['password'])
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unsupported content type"
+            )
+
+        response = await auth_service.authenticate_user(form_data.email, form_data.password, db)
+        
+        if response.error:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=response.message
+            )
+
+        return response
+
+    except ValidationError as e:
+        raise RequestValidationError(e.errors())
+    except HTTPException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)

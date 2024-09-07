@@ -5,7 +5,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from src.env.config import settings
 from src.schemas.user_schema import UserResponse
-from src.services.auth_service import AuthService
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.env.database import get_db
+from src.utils.common import get_user_by_email
 
 # OAuth2PasswordBearer is used to extract the token from the Authorization header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -43,16 +45,13 @@ def decode_access_token(token: str) -> Optional[str]:
         Optional[str]: The username if the token is valid, otherwise None.
     """
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        username: str = payload.get("sub")
-        if username is None:
-            return None
-        return username
+        user = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return user
     except JWTError:
         return None
 
 # Get the current user based on the token
-def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> UserResponse:
     """
     Retrieve the current user from the JWT token.
 
@@ -65,17 +64,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     Raises:
         HTTPException: If the token is invalid or the user does not exist.
     """
-    auth_service = AuthService()
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        email = decode_access_token(token)
-        if email is None:
-            raise credentials_exception
-        user = auth_service.get_user_by_email(email)  # Make sure this method exists in your AuthService
+        user = decode_access_token(token)
         if user is None:
             raise credentials_exception
     except JWTError:

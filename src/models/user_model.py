@@ -1,5 +1,3 @@
-# auth-microservice/src/models/user_model.py
-
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from src.models.base import Base

@@ -1,5 +1,3 @@
-# auth-microservice/src/schemas/token_schema.py
-
 from pydantic import BaseModel
 
 # Schema for access token
