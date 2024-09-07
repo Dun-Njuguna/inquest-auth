@@ -13,7 +13,6 @@ router = APIRouter()
 auth_service = AuthService()
 
 
-
 @router.post("/register", response_model=ResponseModel)
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     try:

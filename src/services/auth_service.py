@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Optional
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -81,29 +80,6 @@ class AuthService:
                 )
             else:
                 raise Exception("Invalid credentials")
-        except Exception as e:
-            return ResponseModel(
-                error=True,
-                message=str(e),
-                data=None
-            )
-        
-
-    async def get_user_by_id(self, userId: int, db: AsyncSession) -> ResponseModel:
-        try:
-            query = select(User).where(User.id == userId)
-            result = db.execute(query)
-            user = result.scalars().first()
-            
-            if user :
-                user_response = UserResponse.model_validate(user)
-                return ResponseModel(
-                    error=False,
-                    message="Request successful",
-                    data= user_response.model_dump()
-                )
-            else:
-                raise Exception("Invalid user id")
         except Exception as e:
             return ResponseModel(
                 error=True,

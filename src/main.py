@@ -5,8 +5,15 @@ from src.utils.app_lifespan import lifespan
 from src.utils.exception_handlers import global_exception_handler, global_http_exception_handler, validation_exception_handler
 from src.controllers.auth_controller import router as auth_router
 from src.controllers import auth_controller, user_controller
+from src.utils.auth_middleware import AuthMiddleware
 
 app = FastAPI(lifespan=lifespan)
+
+# List of routes to exempt from authentication
+exempt_paths = ["/auth/"]
+
+# Add the AuthMiddleware
+app.add_middleware(AuthMiddleware, exempt_paths=exempt_paths)
 
 app.add_exception_handler(Exception, global_exception_handler)
 app.add_exception_handler(HTTPException, global_http_exception_handler)
