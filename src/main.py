@@ -7,10 +7,14 @@ from src.controllers.auth_controller import router as auth_router
 from src.controllers import auth_controller, user_controller
 from src.utils.auth_middleware import AuthMiddleware
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+        lifespan=lifespan,
+        docs_url="/docs", 
+        redoc_url="/redoc"
+    )
 
 # List of routes to exempt from authentication
-exempt_paths = ["/auth/"]
+exempt_paths = ["/auth/", "/docs", "/redoc", "/openapi.json"]
 
 # Add the AuthMiddleware
 app.add_middleware(AuthMiddleware, exempt_paths=exempt_paths)
